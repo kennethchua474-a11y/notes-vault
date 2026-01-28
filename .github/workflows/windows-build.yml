@@ -26,6 +26,9 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
 
+      - name: Install PyInstaller
+        run: poetry add --group dev pyinstaller
+
       # Extract version
       - name: Extract version
         shell: pwsh
@@ -74,25 +77,35 @@ VSVersionInfo(
   ]
 )
 "@
+
           $content | Out-File version.txt -Encoding utf8
 
       # Build exe
       - name: Build EXE
         shell: pwsh
-        run: poetry run pyinstaller --onefile --windowed --name NotesVault --icon assets/icon.ico --version-file version.txt notes_app/gui.py
+        run: |
+          poetry run pyinstaller `
+            --onefile `
+            --windowed `
+            --name NotesVault `
+            --icon assets/icon.ico `
+            --version-file version.txt `
+            notes_app/gui.py
 
       # Prepare release output
       - name: Prepare release folder
         shell: pwsh
         run: |
           mkdir release
-          Copy-Item dist/NotesVault.exe release/NotesVault-$env:VERSION.exe
+          Copy-Item dist\NotesVault.exe release\NotesVault-$env:VERSION.exe
 
       # Create ZIP
       - name: Create ZIP
         shell: pwsh
         run: |
-          Compress-Archive -Path release/NotesVault-$env:VERSION.exe -DestinationPath release/NotesVault-$env:VERSION.zip
+          Compress-Archive `
+            release\NotesVault-$env:VERSION.exe `
+            release\NotesVault-$env:VERSION.zip
 
       # Create GitHub Release
       - name: Create Release
