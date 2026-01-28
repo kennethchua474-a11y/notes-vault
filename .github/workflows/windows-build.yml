@@ -62,11 +62,11 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'Kenneth Chua'),
           StringStruct('FileDescription', 'Personal Notes Vault'),
-          StringStruct('FileVersion', '$($v)'),
+          StringStruct('FileVersion', '$v'),
           StringStruct('InternalName', 'NotesVault'),
           StringStruct('OriginalFilename', 'NotesVault.exe'),
           StringStruct('ProductName', 'NotesVault'),
-          StringStruct('ProductVersion', '$($v)')
+          StringStruct('ProductVersion', '$v')
         ]
       )
     ]),
@@ -99,3 +99,4 @@ VSVersionInfo(
         uses: softprops/action-gh-release@v2
         with:
           files: release/NotesVault-${{ env.VERSION }}.zip
+
