@@ -84,13 +84,7 @@ VSVersionInfo(
       - name: Build EXE
         shell: pwsh
         run: |
-          poetry run pyinstaller `
-            --onefile `
-            --windowed `
-            --name NotesVault `
-            --icon assets/icon.ico `
-            --version-file version.txt `
-            notes_app/gui.py
+          poetry run pyinstaller --onefile --windowed --name NotesVault --icon assets/icon.ico --version-file version.txt notes_app/gui.py
 
       # Prepare release output
       - name: Prepare release folder
@@ -103,13 +97,10 @@ VSVersionInfo(
       - name: Create ZIP
         shell: pwsh
         run: |
-          Compress-Archive `
-            release\NotesVault-$env:VERSION.exe `
-            release\NotesVault-$env:VERSION.zip
+          Compress-Archive release\NotesVault-$env:VERSION.exe release\NotesVault-$env:VERSION.zip
 
       # Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: release/NotesVault-${{ env.VERSION }}.zip
-

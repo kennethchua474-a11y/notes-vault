@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "notes-vault"
-version = "0.1.5"
+version = "0.1.6"
 description = "A simple desktop application for managing personal notes"
 authors = ["Kenneth Chua <kennethchua474@gmail.com>"]
 readme = "README.md"
