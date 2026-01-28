@@ -26,9 +26,6 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
 
-      - name: Install PyInstaller
-        run: poetry add --group dev pyinstaller
-
       # Extract version
       - name: Extract version
         shell: pwsh
@@ -65,11 +62,11 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'Kenneth Chua'),
           StringStruct('FileDescription', 'Personal Notes Vault'),
-          StringStruct('FileVersion', '$v'),
+          StringStruct('FileVersion', '$($v)'),
           StringStruct('InternalName', 'NotesVault'),
           StringStruct('OriginalFilename', 'NotesVault.exe'),
           StringStruct('ProductName', 'NotesVault'),
-          StringStruct('ProductVersion', '$v')
+          StringStruct('ProductVersion', '$($v)')
         ]
       )
     ]),
@@ -89,13 +86,13 @@ VSVersionInfo(
         shell: pwsh
         run: |
           mkdir release
-          Copy-Item dist\NotesVault.exe release\NotesVault-$env:VERSION.exe
+          Copy-Item dist/NotesVault.exe release/NotesVault-$env:VERSION.exe
 
       # Create ZIP
       - name: Create ZIP
         shell: pwsh
         run: |
-          Compress-Archive release\NotesVault-$env:VERSION.exe release\NotesVault-$env:VERSION.zip
+          Compress-Archive -Path release/NotesVault-$env:VERSION.exe -DestinationPath release/NotesVault-$env:VERSION.zip
 
       # Create GitHub Release
       - name: Create Release
