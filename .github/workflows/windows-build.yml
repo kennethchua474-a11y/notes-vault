@@ -77,14 +77,12 @@ VSVersionInfo(
   ]
 )
 "@
-
           $content | Out-File version.txt -Encoding utf8
 
       # Build exe
       - name: Build EXE
         shell: pwsh
-        run: |
-          poetry run pyinstaller --onefile --windowed --name NotesVault --icon assets/icon.ico --version-file version.txt notes_app/gui.py
+        run: poetry run pyinstaller --onefile --windowed --name NotesVault --icon assets/icon.ico --version-file version.txt notes_app/gui.py
 
       # Prepare release output
       - name: Prepare release folder
