@@ -14,9 +14,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -29,28 +31,26 @@ jobs:
       - name: Install PyInstaller
         run: poetry add --group dev pyinstaller
 
-      # Extract version
+      # Extract version from tag
       - name: Extract version
         shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart("v")
           echo "VERSION=$version" >> $env:GITHUB_ENV
 
-      # Generate version file safely
-      - name: Generate Windows version file
-        shell: pwsh
+      # Generate version.txt using Python (YAML-safe)
+      - name: Generate version file
         run: |
-          $v = $env:VERSION
-          $parts = $v.Split(".")
-          $major = $parts[0]
-          $minor = $parts[1]
-          $patch = $parts[2]
+          python - <<EOF
+import os
 
-          $content = @"
-VSVersionInfo(
+v = os.environ["VERSION"]
+major, minor, patch = v.split(".")
+
+content = f"""VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=($major,$minor,$patch,0),
-    prodvers=($major,$minor,$patch,0),
+    filevers=({major},{minor},{patch},0),
+    prodvers=({major},{minor},{patch},0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -65,41 +65,39 @@ VSVersionInfo(
         [
           StringStruct('CompanyName', 'Kenneth Chua'),
           StringStruct('FileDescription', 'Personal Notes Vault'),
-          StringStruct('FileVersion', '$v'),
+          StringStruct('FileVersion', '{v}'),
           StringStruct('InternalName', 'NotesVault'),
           StringStruct('OriginalFilename', 'NotesVault.exe'),
           StringStruct('ProductName', 'NotesVault'),
-          StringStruct('ProductVersion', '$v')
+          StringStruct('ProductVersion', '{v}')
         ]
       )
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
 )
-"@
+"""
 
-          $content | Out-File version.txt -Encoding utf8
+with open("version.txt", "w", encoding="utf-8") as f:
+    f.write(content)
+EOF
 
-      # Build exe
       - name: Build EXE
-        shell: pwsh
         run: |
-          poetry run pyinstaller `
-            --onefile `
-            --windowed `
-            --name NotesVault `
-            --icon assets/icon.ico `
-            --version-file version.txt `
+          poetry run pyinstaller ^
+            --onefile ^
+            --windowed ^
+            --name NotesVault ^
+            --icon assets/icon.ico ^
+            --version-file version.txt ^
             notes_app/gui.py
 
-      # Prepare release output
       - name: Prepare release folder
         shell: pwsh
         run: |
           mkdir release
           Copy-Item dist\NotesVault.exe release\NotesVault-$env:VERSION.exe
 
-      # Create ZIP
       - name: Create ZIP
         shell: pwsh
         run: |
@@ -107,7 +105,6 @@ VSVersionInfo(
             release\NotesVault-$env:VERSION.exe `
             release\NotesVault-$env:VERSION.zip
 
-      # Create GitHub Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
