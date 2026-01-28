@@ -14,11 +14,9 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -31,18 +29,16 @@ jobs:
       - name: Install PyInstaller
         run: poetry add --group dev pyinstaller
 
-      # ---------------------------------
-      # Extract version from tag
-      # ---------------------------------
+      # Extract version
       - name: Extract version
+        shell: pwsh
         run: |
           $version = "${{ github.ref_name }}".TrimStart("v")
           echo "VERSION=$version" >> $env:GITHUB_ENV
 
-      # ---------------------------------
-      # Generate version.txt dynamically
-      # ---------------------------------
+      # Generate version file safely
       - name: Generate Windows version file
+        shell: pwsh
         run: |
           $v = $env:VERSION
           $parts = $v.Split(".")
@@ -50,7 +46,7 @@ jobs:
           $minor = $parts[1]
           $patch = $parts[2]
 
-          @"
+          $content = @"
 VSVersionInfo(
   ffi=FixedFileInfo(
     filevers=($major,$minor,$patch,0),
@@ -80,12 +76,13 @@ VSVersionInfo(
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
   ]
 )
-"@ | Out-File version.txt -Encoding utf8
+"@
 
-      # ---------------------------------
-      # Build EXE
-      # ---------------------------------
+          $content | Out-File version.txt -Encoding utf8
+
+      # Build exe
       - name: Build EXE
+        shell: pwsh
         run: |
           poetry run pyinstaller `
             --onefile `
@@ -93,28 +90,24 @@ VSVersionInfo(
             --name NotesVault `
             --icon assets/icon.ico `
             --version-file version.txt `
-            notes_vault/main.py
+            notes_app/gui.py
 
-      # ---------------------------------
-      # Prepare versioned release output
-      # ---------------------------------
+      # Prepare release output
       - name: Prepare release folder
+        shell: pwsh
         run: |
           mkdir release
-          copy dist\NotesVault.exe release\NotesVault-$env:VERSION.exe
+          Copy-Item dist\NotesVault.exe release\NotesVault-$env:VERSION.exe
 
-      # ---------------------------------
-      # Create ZIP for Gumroad
-      # ---------------------------------
+      # Create ZIP
       - name: Create ZIP
+        shell: pwsh
         run: |
-          powershell Compress-Archive `
+          Compress-Archive `
             release\NotesVault-$env:VERSION.exe `
             release\NotesVault-$env:VERSION.zip
 
-      # ---------------------------------
       # Create GitHub Release
-      # ---------------------------------
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
